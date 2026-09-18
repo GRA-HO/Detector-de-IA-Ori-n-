@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detector de IA Orión - Análisis Estilométrico y Probabilidad Estimada</title>
+<meta name="description" content="Detector lingüístico y estilométrico de texto para estimar patrones de escritura automatizada y humana en español.">
+<meta property="og:title" content="Detector de IA Orión - Análisis Estilométrico y Probabilidad Estimada">
+<meta property="og:description" content="Detector lingüístico y estilométrico de texto para estimar patrones de escritura automatizada y humana en español.">
+<meta name="theme-color" content="#1a102e">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0a1a;
+  --card: #1c1433;
+  --card2: #231b3f;
+  --lila: #c9b6ff;
+  --lila2: #a78bfa;
+  --borde: #3a2d61;
+  --txt: #e9e4ff;
+  --muted: #9f93c7;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --info: #60a5fa;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 50% -10%, #2a1e5a 0%, var(--bg) 60%);
+  color: var(--txt);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+h1, h2, h3 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: -0.01em;
+}
+.wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 16px 14px 90px;
+}
+.header {
+  text-align: center;
+  padding: 24px 10px 12px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: .28em;
+  font-size: .7rem;
+  color: var(--lila);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.header h1 {
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  margin: 8px 0 6px;
+  color: #f1ebff;
+  font-weight: 700;
+}
+.small {
+  font-size: .85rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.card {
+  background: linear-gradient(180deg, var(--card2), var(--card));
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 14px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+label {
+  font-size: .72rem;
+  letter-spacing: .16em;
+  color: var(--muted);
+  display: block;
+  margin: 10px 2px 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+select, input, textarea {
+  width: 100%;
+  background: #110d20;
+  border: 1px solid var(--borde);
+  color: var(--txt);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: .95rem;
+  font-family: inherit;
+  transition: border-color .2s, box-shadow .2s;
+}
+select:hover, input:hover, textarea:hover {
+  border-color: #58458c;
+}
+textarea {
+  min-height: 220px;
+  resize: vertical;
+  line-height: 1.65;
+}
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 650px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+}
+.btns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-size: .9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .2s ease;
+  min-height: 44px;
+  text-decoration: none;
+  user-select: none;
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn-primary {
+  background: var(--lila2);
+  color: #120c22;
+  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.25);
+}
+.btn-primary:hover:not(:disabled) {
+  background: #b79cfc;
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.35);
+}
+.btn-ghost {
+  background: #1a1430;
+  color: var(--txt);
+  border: 1px solid var(--borde);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: #261d44;
+  border-color: #55418a;
+}
+.btn-sm {
+  padding: 8px 12px;
+  font-size: .8rem;
+  border-radius: 10px;
+  min-height: 36px;
+}
+.btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--lila2);
+  outline-offset: 2px;
+}
+
+/* Big Number & Results */
+.big-num {
+  font-size: clamp(3.8rem, 8vw, 5.5rem);
+  font-weight: 700;
+  color: #f3edff;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  line-height: 1;
+  margin: 4px 0;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2a224a;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: .78rem;
+  color: var(--lila);
+  margin: 4px 4px 4px 0;
+  font-weight: 500;
+}
+.pill-neutral {
+  background: #181329;
+  color: var(--txt);
+}
+.pill-alert {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+.pill-human {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+}
+.bar {
+  height: 9px;
+  background: #140f27;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+  border: 1px solid var(--borde);
+  position: relative;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  transition: width .6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bar-ai {
+  background: linear-gradient(90deg, #7c5cff, #c9b6ff);
+}
+.bar-human {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+.bar-mixed {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+/* Tabs */
+.tabs-nav {
+  display: flex;
+  overflow-x: auto;
+  gap: 6px;
+  border-bottom: 1px solid var(--borde);
+  margin: 0 -20px 18px;
+  padding: 0 20px 10px;
+  scrollbar-width: thin;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: .85rem;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .2s;
+}
+.tab-btn:hover {
+  color: var(--txt);
+  background: rgba(201, 182, 255, 0.08);
+}
+.tab-btn.active {
+  color: #120c22;
+  background: var(--lila);
+}
+.tab-pane {
+  display: none;
+}
+.tab-pane.active {
+  display: block;
+  animation: fadeIn .3s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sentence Map Inspector */
+.sentence-flow {
+  background: #120d24;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 16px;
+  line-height: 1.8;
+  font-size: .95rem;
+  max-height: 380px;
+  overflow-y: auto;
+}
+.s-mark {
+  padding: 3px 6px;
+  border-radius: 6px;
+  margin: 0 2px;
+  cursor: pointer;
+  transition: background .15s;
+  display: inline;
+}
+.s-mark:hover {
+  filter: brightness(1.25);
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.4);
+}
+.s-ai-high {
+  background: rgba(239, 68, 68, 0.28);
+  border-bottom: 2px solid #ef4444;
+}
+.s-ai-mid {
+  background: rgba(245, 158, 11, 0.22);
+  border-bottom: 2px solid #f59e0b;
+}
+.s-human {
+  background: rgba(16, 185, 129, 0.18);
+  border-bottom: 2px solid #10b981;
+}
+
+/* Counters Bar */
+.counter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 4px;
+  font-size: .8rem;
+  color: var(--muted);
+  border-top: 1px dashed rgba(58, 45, 97, 0.7);
+}
+.counter-group {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.counter-item b {
+  color: var(--txt);
+}
+.validation-hint {
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.validation-hint.good { color: var(--success); }
+.validation-hint.warn { color: var(--warning); }
+.validation-hint.bad { color: var(--danger); }
+
+/* Notifications / Toast */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #251c44;
+  border: 1px solid var(--lila2);
+  color: var(--txt);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: .9rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 1000;
+  align-items: center;
+  gap: 10px;
+  animation: slideIn .25s ease;
+}
+@keyframes slideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 4, 13, 0.82);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal-box {
+  background: #1c1433;
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--borde);
+  padding-bottom: 12px;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #f1ebff;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  line-height: 1;
+}
+.close-btn:hover {
+  color: var(--txt);
+  background: #2b1f50;
+}
+
+/* Loader */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(18, 12, 34, 0.3);
+  border-top-color: #120c22;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Grid metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.metric-box {
+  background: #151028;
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 14px;
+}
+.metric-box .m-val {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f2ecff;
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+.metric-box .m-label {
+  font-size: .75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-top: 2px;
+}
+.metric-box .m-desc {
+  font-size: .8rem;
+  color: #b7abd8;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* History cards */
+.hist-item {
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: #161129;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: background .2s, border-color .2s;
+}
+.hist-item:hover {
+  background: #20183b;
+  border-color: #554189;
+}
+.hist-click {
+  cursor: pointer;
+  flex: 1;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- Encabezado Principal -->
+  <header class="header">
+    <div class="badge">✦ ANÁLISIS ESTILOMÉTRICO · ORIÓN ✦</div>
+    <h1>Detector de IA Orión</h1>
+    <div class="small">“Primero analizar. Después contrastar. El detector estima indicadores estilísticos; el criterio humano y el contexto deciden.”</div>
+  </header>
+
+  <!-- Filtros de Contexto Lingüístico & Sensibilidad -->
+  <section class="card" aria-labelledby="sec-contexto">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <h2 id="sec-contexto" style="font-size:1.3rem; margin:0; color:#eee7fc;">Contexto y Calibración Lingüística</h2>
+      <button class="btn btn-ghost btn-sm" onclick="abrirModalMetodologia()" aria-label="Ver metodología y límites">
+        ℹ Metodología & Límites
+      </button>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div>
+        <label for="pais">PAÍS / DIALECTO PRINCIPAL</label>
+        <select id="pais" onchange="actualizarModismosRecomendados()"></select>
+      </div>
+      <div>
+        <label for="tipoTexto">TIPO DE TEXTO (SENSIBILIDAD)</label>
+        <select id="tipoTexto">
+          <option value="rol">Rol / Narrativa / Diálogos literarios</option>
+          <option value="general" selected>General / Redacción libre</option>
+          <option value="ensayo">Ensayo formal / Trabajo académico</option>
+          <option value="chat">Conversacional / Chat informal</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="region">PROVINCIA / ESTADO / REGIÓN (OPCIONAL)</label>
+        <input id="region" type="text" placeholder="Ej. Santa Fe, Antioquia, Jalisco...">
+      </div>
+      <div>
+        <label for="ciudad">CIUDAD / ZONA (OPCIONAL)</label>
+        <input id="ciudad" type="text" placeholder="Ej. Reconquista, Medellín, Guadalajara...">
+      </div>
+    </div>
+  </section>
+
+  <!-- Editor de Texto de Entrada -->
+  <main class="card">
+    <label for="texto">TEXTO A EXAMINAR</label>
+    <textarea id="texto" placeholder="Pegá o escribí acá el texto completo para analizar su ritmo, vocabulario, burstiness y señales lingüísticas..."></textarea>
+
+    <!-- Barra de Contadores y Validación en Tiempo Real -->
+    <div class="counter-bar" id="counterBar">
+      <div class="counter-group">
+        <span class="counter-item"><b id="cntPalabras">0</b> palabras</span>
+        <span class="counter-item"><b id="cntCaracteres">0</b> caracteres</span>
+        <span class="counter-item"><b id="cntOraciones">0</b> oraciones</span>
+        <span class="counter-item"><b id="cntLectura">0</b> min de lectura</span>
+      </div>
+      <div id="validationStatus" class="validation-hint warn">
+        <span>⚠ Ingresá al menos 25 palabras para estimar</span>
+      </div>
+    </div>
+
+    <!-- Barra de Herramientas Interactivas -->
+    <div class="btns">
+      <button class="btn btn-primary" id="btnAnalizar" onclick="analizar()">
+        <span id="btnAnalizarIcon">✦</span>
+        <span id="btnAnalizarText">Analizar texto</span>
+      </button>
+
+      <button class="btn btn-ghost" onclick="pegarTexto()" title="Pegar contenido copiado del portapapeles">
+        📋 Pegar texto
+      </button>
+
+      <button class="btn btn-ghost" onclick="cargarEjemplo('ia')" title="Probar texto sintético típico de modelo de lenguaje">
+        🤖 Ejemplo IA
+      </button>
+
+      <button class="btn btn-ghost" onclick="cargarEjemplo('humano')" title="Probar texto humano narrativo con giros naturales">
+        ✍ Ejemplo Humano
+      </button>
+
+      <button class="btn btn-ghost" onclick="limpiar()" title="Limpiar caja de texto y diagnóstico actual">
+        🗑 Limpiar
+      </button>
+    </div>
+  </main>
+
+  <!-- Área de Salida Dinámica -->
+  <section id="output" aria-live="polite"></section>
+
+  <!-- Historial de Análisis -->
+  <section id="historialCard" class="card" aria-labelledby="hist-title">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h2 id="hist-title" style="margin:0; font-size:1.4rem;">Historial de Análisis</h2>
+      <button class="btn btn-ghost btn-sm" id="btnBorrarHistorial" onclick="borrarHistorial()" style="display:none;">
+        Vaciar historial
+      </button>
+    </div>
+    <div id="historialLista">
+      <div class="small">Todavía no hay análisis guardados en esta sesión.</div>
+    </div>
+  </section>
+</div>
+
+<!-- Modal: Metodología y Límites -->
+<div class="modal-overlay" id="modalMetodologia" onclick="cerrarModalMetodologia(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Metodología & Limitaciones Éticas</h3>
+      <button class="close-btn" onclick="cerrarModalMetodologia()" aria-label="Cerrar ventana">&times;</button>
+    </div>
+    <div class="small" style="color:var(--txt); font-size:.9rem; line-height:1.6;">
+      <p><b>¿Cómo funciona el Detector Orión?</b><br>
+      Orión ejecuta una auditoría <b>estilométrica y estadística multidimensional</b> diseñada para identificar discrepancias entre patrones de escritura humana y generación de grandes modelos de lenguaje (LLMs):</p>
+
+      <ul style="padding-left:20px; margin:10px 0;">
+        <li><b>Burstiness (Variabilidad de Cadencia):</b> Los humanos alternamos oraciones breves, incisos, exclamaciones y párrafos extensos. Los LLMs tienden a una distribución gaussiana homogénea con baja desviación típica.</li>
+        <li><b>Riqueza Léxica Corregida (Índice de Guiraud):</b> Evaluamos el vocabulario sin penalizar a textos largos mediante la normalización <code>Vocabulario / √(Total Palabras)</code>.</li>
+        <li><b>Clichés y Marcadores Discursivos de LLMs:</b> Identifica estructuras mecánicas sobreutilizadas por modelos ("es fundamental destacar", "en resumen", "un testimonio de", "en el tapiz de", etc.).</li>
+        <li><b>Marcas Enunciativas Personales:</b> Detección de primera persona, afectividad y opiniones subjetivas vs. neutralidad enciclopédica pasiva.</li>
+        <li><b>Anclaje Dialectal y Regionalismos:</b> Identificación de modismos y léxico específico de más de 12 variantes hispanohablantes.</li>
+      </ul>
+
+      <p style="background:rgba(251, 191, 36, 0.1); border-left:3px solid var(--warning); padding:10px; border-radius:6px; color:#fde68a;">
+        <b>AVISO IMPORTANTE SOBRE PRECISIÓN:</b><br>
+        Ningún detector estilométrico ni basado en modelos posee precisión del 100%. Este resultado es una <b>probabilidad estimada orientativa</b>. Textos técnicos, formales, jurídicos o redactados por personas muy meticulosas pueden presentar una cadencia regular sin que hayan sido generados por una máquina. No debe utilizarse como sanción disciplinaria sin revisión humana contextual.
+      </p>
+    </div>
+    <div style="text-align:right; margin-top:16px;">
+      <button class="btn btn-primary btn-sm" onclick="cerrarModalMetodologia()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Inspector de Oración -->
+<div class="modal-overlay" id="modalOracion" onclick="cerrarModalOracion(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modalOracionTitulo">Inspección de Oración</h3>
+      <button class="close-btn" onclick="cerrarModalOracion()" aria-label="Cerrar ventana">&times;</button>
+    </div>
+    <div id="modalOracionContenido" style="font-size:.95rem; line-height:1.6;"></div>
+    <div style="text-align:right; margin-top:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="cerrarModalOracion()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast flotante para feedback inmediato -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ==========================================================================
+   CONFIGURACIÓN LINGÜÍSTICA Y CATÁLOGOS REGIONALES
+   ========================================================================== */
+const PAISES = [
+  "Argentina", "Bolivia", "Chile", "Colombia", "Costa Rica", "Cuba",
+  "Ecuador", "El Salvador", "Guatemala", "Honduras", "México", "Nicaragua",
+  "Panamá", "Paraguay", "Perú", "República Dominicana", "Uruguay",
+  "Venezuela", "Puerto Rico", "España", "Estados Unidos — español",
+  "Otro / no especificar"
+];
+
+const REGIONAL = {
+  "Argentina": [
+    "che", "re", "posta", "laburo", "pibe", "piba", "dale", "ahre", "boludo", "boluda",
+    "bondi", "quilombo", "copado", "bancar", "vos", "tenés", "podés", "querés", "chabón",
+    "guacho", "mina", "morfar", "guita", "chamuyo", "zafar", "macanudo", "aflojar", "pelotudo"
+  ],
+  "México": [
+    "güey", "wey", "órale", "chido", "chamba", "neta", "chale", "ustedes", "no manches",
+    "padre", "gacho", "lana", "carnal", "híjole", "apapacho", "morro", "chela", "paro"
+  ],
+  "Venezuela": [
+    "pana", "chamo", "chama", "chévere", "burda", "vaina", "arrecho", "ladilla", "chamba",
+    "coroto", "guayabo", "mamadera de gallo", "naguará"
+  ],
+  "Chile": [
+    "po", "cachai", "bacán", "fome", "al tiro", "pololo", "polola", "weón", "weona",
+    "cuático", "la raja", "carrete", "luca", "guagua", "paco"
+  ],
+  "España": [
+    "tío", "tía", "vale", "guay", "currar", "curro", "mola", "chaval", "vosotros", "flipar",
+    "pasta", "mogollón", "gilipollas", "coñazo", "maja", "majo", "chulo"
+  ],
+  "Colombia": [
+    "parce", "parcero", "bacano", "camellar", "camello", "chimba", "berraquera", "berraco",
+    "pola", "charro", "paila", "veci", "gonorrea", "sumercé"
+  ],
+  "Perú": [
+    "causa", "pata", "jato", "choche", "pisco", "asul", "chamba", "churre", "chela", "palta",
+    "asombro", "pituco", "chapa"
+  ],
+  "Uruguay": [
+    "bo", "gurí", "gurisa", "botija", "ta", "salado", "chiche", "vichar", "championes",
+    "plata", "fa", "vo", "quilombo", "bancar"
+  ],
+  "Cuba": [
+    "asere", "qué bolá", "acere", "yuma", "jama", "pincha", "guagua", "fajao", "monina"
+  ],
+  "Costa Rica": [
+    "mae", "pura vida", "tuanis", "brete", "chunche", "chapa", "diay", "macho", "hermano"
+  ]
+};
+
+// Clichés frecuentes en modelos de lenguaje sintéticos en español
+const AI_CLICHES = [
+  "en conclusión", "es importante destacar", "cabe destacar", "en este sentido",
+  "por lo tanto", "sin duda alguna", "como modelo de lenguaje", "en términos generales",
+  "juega un papel fundamental", "desempeña un papel crucial", "en resumen",
+  "un tapiz de", "un testimonio de", "a fin de cuentas", "es crucial recordar",
+  "vale la pena señalar", "en última instancia", "por consiguiente", "en el panorama actual",
+  "nos invita a reflexionar", "resulta imperativo", "no se puede subestimar",
+  "en síntesis", "esencial para comprender"
+];
+
+// Conectores oracionales rígidos y sobreutilizados
+const FORMAL_CONNECTORS = [
+  "sin embargo", "no obstante", "por consiguiente", "asimismo", "en consecuencia",
+  "por otra parte", "en virtud de ello", "por ende", "de tal manera que",
+  "cabe resaltar", "con respecto a", "en lo concerniente a", "pese a lo anterior"
+];
+
+// Elementos de diálogo y marcas personales humanas
+const PERSONAL_MARKERS = [
+  "yo", "me", "mi", "mis", "mío", "mía", "míos", "mías", "conmigo", "nos",
+  "nosotros", "nosotras", "nuestro", "nuestra", "nuestros", "nuestras",
+  "creo", "siento", "pienso", "opino", "recuerdo", "digo", "vi", "escuché",
+  "quiero", "tengo", "tuve", "estoy", "fui", "hice", "pude", "temo", "odio", "amo"
+];
+
+let analisisActual = null;
+
+/* ==========================================================================
+   INICIALIZACIÓN DE LA APLICACIÓN
+   ========================================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  poblarSelectorPaises();
+  vincularEventosTexto();
+  renderHistorial();
+});
+
+function poblarSelectorPaises() {
+  const sel = document.getElementById("pais");
+  sel.innerHTML = "";
+  PAISES.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    if (p === "Argentina") opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function vincularEventosTexto() {
+  const txt = document.getElementById("texto");
+  txt.addEventListener("input", actualizarContadores);
+  txt.addEventListener("keyup", actualizarContadores);
+}
+
+function actualizarModismosRecomendados() {
+  const pais = document.getElementById("pais").value;
+  const modismos = REGIONAL[pais];
+  if (modismos && modismos.length) {
+    mostrarToast(`Contexto fijado en ${pais} (${modismos.slice(0, 5).join(", ")}...)`);
+  }
+}
+
+/* ==========================================================================
+   UTILIDADES LINGÜÍSTICAS Y TOKENIZACIÓN ROBUSTA
+   ========================================================================== */
+function esc(str) {
+  return String(str ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+// Tokeniza palabras respetando tildes, diéresis, caracteres del español y contracciones
+function tokenizeWords(text) {
+  return text.match(/\p{L}+(?:['’-]\p{L}+)?/gu) || [];
+}
+
+// Segmentación oracional respetando abreviaturas frecuentes para no quebrar frases falsas
+function tokenizeSentences(text) {
+  if (!text.trim()) return [];
+  // Protegemos abreviaturas comunes en español
+  const abrevs = [
+    { regex: /\bDr\./gi, rep: "Dr@@" },
+    { regex: /\bDra\./gi, rep: "Dra@@" },
+    { regex: /\bSr\./gi, rep: "Sr@@" },
+    { regex: /\bSra\./gi, rep: "Sra@@" },
+    { regex: /\bej\./gi, rep: "ej@@" },
+    { regex: /\bpág\./gi, rep: "pág@@" },
+    { regex: /\betc\./gi, rep: "etc@@" },
+    { regex: /\bvs\./gi, rep: "vs@@" },
+    { regex: /\bprof\./gi, rep: "prof@@" }
+  ];
+
+  let clean = text;
+  abrevs.forEach(a => { clean = clean.replace(a.regex, a.rep); });
+
+  // Dividimos por puntos, signos de exclamación o interrogación
+  const rawParts = clean.split(/(?<=[.!?…])\s+(?=[A-ZÁÉÍÓÚÜÑ"«—¿¡])/g);
+
+  const sentences = [];
+  rawParts.forEach(part => {
+    let restored = part;
+    abrevs.forEach(a => {
+      const restoreRegex = new RegExp(a.rep, "g");
+      restored = restored.replace(restoreRegex, a.rep.replace("@@", "."));
+    });
+    const trimmed = restored.trim();
+    if (trimmed && tokenizeWords(trimmed).length >= 2) {
+      sentences.push(trimmed);
+    }
+  });
+
+  return sentences.length > 0 ? sentences : [text.trim()];
+}
+
+// Cálculo del Coeficiente de Variación (Burstiness métrico)
+function calcularEstadisticasOraciones(sentences) {
+  if (!sentences.length) return { lengths: [], mean: 0, std: 0, cv: 0, median: 0 };
+  const lengths = sentences.map(s => tokenizeWords(s).length);
+  const sum = lengths.reduce((acc, l) => acc + l, 0);
+  const mean = sum / lengths.length;
+
+  const variance = lengths.reduce((acc, l) => acc + Math.pow(l - mean, 2), 0) / lengths.length;
+  const std = Math.sqrt(variance);
+  const cv = mean > 0 ? std / mean : 0; // Coeficiente de variación (Burstiness)
+
+  const sorted = [...lengths].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+
+  return { lengths, mean, std, cv, median };
+}
+
+/* ==========================================================================
+   ACTUALIZADOR DE CONTADORES EN TIEMPO REAL
+   ========================================================================== */
+function actualizarContadores() {
+  const texto = document.getElementById("texto").value;
+  const words = tokenizeWords(texto);
+  const chars = texto.length;
+  const sentences = tokenizeSentences(texto);
+  const wCount = words.length;
+
+  document.getElementById("cntPalabras").textContent = wCount;
+  document.getElementById("cntCaracteres").textContent = chars;
+  document.getElementById("cntOraciones").textContent = textTieneContenido(texto) ? sentences.length : 0;
+
+  // Tiempo estimado de lectura (200 ppm)
+  const mins = (wCount / 200).toFixed(1);
+  document.getElementById("cntLectura").textContent = mins;
+
+  // Feedback de validación
+  const valDiv = document.getElementById("validationStatus");
+  if (wCount === 0) {
+    valDiv.className = "validation-hint";
+    valDiv.innerHTML = "<span>Ingresá un texto para comenzar</span>";
+  } else if (wCount < 25) {
+    valDiv.className = "validation-hint bad";
+    valDiv.innerHTML = "<span>⚠ Muy corto (mínimo 25 palabras para cálculo oracional)</span>";
+  } else if (wCount < 60) {
+    valDiv.className = "validation-hint warn";
+    valDiv.innerHTML = "<span>ℹ Texto breve: muestra orientativa limitada</span>";
+  } else {
+    valDiv.className = "validation-hint good";
+    valDiv.innerHTML = "<span>✓ Extensión adecuada para análisis estadístico</span>";
+  }
+}
+
+function textTieneContenido(txt) {
+  return txt && txt.trim().length > 0;
+}
+
+/* ==========================================================================
+   MOTOR LINGÜÍSTICO Y DETECCIÓN ESTILOMÉTRICA (HEURÍSTICA CALIBRADA)
+   ========================================================================== */
+function clamp(val, min = 0, max = 100) {
+  return Math.max(min, Math.min(max, val));
+}
+
+function evaluarMuestrasIndividuales(sentences, aiCliches, formalConnectors) {
+  return sentences.map(sentence => {
+    const sLower = sentence.toLowerCase();
+    const words = tokenizeWords(sentence);
+    const len = words.length;
+
+    let score = 50; // Neutral
+    const razones = [];
+
+    // Longitud uniforme típica de IA (14 a 28 palabras sin fluctuación)
+    if (len >= 14 && len <= 28) {
+      score += 10;
+      razones.push("Longitud homogénea de párrafo explicativo estándar");
+    } else if (len < 6) {
+      score -= 20;
+      razones.push("Oración corta / ritmo quebrado humano");
+    } else if (len > 35) {
+      score -= 8;
+      razones.push("Oración compleja de largo aliento");
+    }
+
+    // Clichés de IA en la oración
+    const clichesEncontrados = aiCliches.filter(c => sLower.includes(c));
+    if (clichesEncontrados.length > 0) {
+      score += 30 * clichesEncontrados.length;
+      razones.push(`Cliché de LLM: "${clichesEncontrados.join('", "')}"`);
+    }
+
+    // Conectores oracionales rígidos
+    const connEncontrados = formalConnectors.filter(c => sLower.includes(c));
+    if (connEncontrados.length > 0) {
+      score += 15 * connEncontrados.length;
+      razones.push(`Conector formal: "${connEncontrados.join('", "')}"`);
+    }
+
+    // Signos de diálogo o exclamación
+    if (/[—"«»¿?¡!]/.test(sentence)) {
+      score -= 18;
+      razones.push("Presencia de diálogo o entonación expresiva");
+    }
+
+    // Puntuación delimitada
+    const scoreClamped = clamp(score, 5, 95);
+    let clasificacion = "humano";
+    if (scoreClamped >= 65) clasificacion = "ai-high";
+    else if (scoreClamped >= 50) clasificacion = "ai-mid";
+
+    return {
+      text: sentence,
+      wordsCount: len,
+      score: scoreClamped,
+      clasificacion,
+      razones
+    };
+  });
+}
+
+function ejecutarAnalisisEstilometrico(texto, pais, tipoTexto) {
+  const words = tokenizeWords(texto);
+  const totalWords = words.length;
+  const lower = texto.toLowerCase();
+  const sentencesRaw = tokenizeSentences(texto);
+  const statsSentences = calcularEstadisticasOraciones(sentencesRaw);
+
+  // Vocabulario único y diversidad léxica
+  const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+  const uniqueCount = uniqueWords.size;
+  // Índice de Guiraud: R = V / sqrt(N) (Normalizado en escala 0-100 para textos en español)
+  const guiraud = totalWords > 0 ? (uniqueCount / Math.sqrt(totalWords)) : 0;
+  // Diversidad porcentual simple (TTR)
+  const ttr = totalWords > 0 ? (uniqueCount / totalWords) * 100 : 0;
+
+  // Búsqueda de modismos regionales seleccionados
+  const regionalDict = pais === "Otro / no especificar"
+    ? [...new Set(Object.values(REGIONAL).flat())]
+    : (REGIONAL[pais] || []);
+
+  const regionalEncontrados = regionalDict.filter(r => {
+    const rx = new RegExp(`\\b${r}\\b`, "i");
+    return rx.test(lower);
+  });
+
+  // Clichés de IA y conectores formales
+  const clichesEncontrados = AI_CLICHES.filter(c => lower.includes(c));
+  const conectoresEncontrados = FORMAL_CONNECTORS.filter(c => lower.includes(c));
+
+  // Marcas de subjetividad y primera persona
+  const marcasPersonalesEncontradas = PERSONAL_MARKERS.filter(m => {
+    const rx = new RegExp(`\\b${m}\\b`, "i");
+    return rx.test(lower);
+  });
+
+  // Repeticiones en aperturas de oraciones
+  const openers = sentencesRaw.map(s => tokenizeWords(s).slice(0, 2).join(" ").toLowerCase()).filter(Boolean);
+  const openerCounts = {};
+  openers.forEach(o => { openerCounts[o] = (openerCounts[o] || 0) + 1; });
+  const repeatedOpeners = Object.values(openerCounts).filter(c => c >= 2).length;
+
+  // Inspección oración por oración
+  const oracionesEvaluadas = evaluarMuestrasIndividuales(sentencesRaw, AI_CLICHES, FORMAL_CONNECTORS);
+
+  // ================= CALIBRACIÓN DE ASPECTOS (PONDERACIÓN CIENTÍFICA) =================
+  // 1. Cadencia y Burstiness (Variabilidad oracional)
+  // CV alto (> 0.45) = típico humano. CV bajo (< 0.28) con oraciones medianas = típico IA
+  let scoreCadencia = 50;
+  if (statsSentences.cv > 0.55) scoreCadencia = 20; // Muy variable (humano)
+  else if (statsSentences.cv > 0.42) scoreCadencia = 35;
+  else if (statsSentences.cv > 0.30) scoreCadencia = 55;
+  else scoreCadencia = 78; // Monótono y uniforme (IA)
+
+  if (repeatedOpeners >= 2) scoreCadencia += 12;
+
+  // 2. Complejidad Léxica & Perplejidad
+  // Los LLMs tienden a tener un Guiraud intermedio-alto muy regular. Vocabularios muy idiosincráticos o con slang bajan puntuación.
+  let scoreLexico = 50;
+  if (guiraud > 7.8) scoreLexico = 45; // Vocabulario ricamente variado
+  else if (guiraud < 4.2) scoreLexico = 62; // Vocabulario repetitivo
+  else scoreLexico = 52;
+
+  // 3. Clichés Sintéticos de Modelos de Lenguaje
+  let scoreCliches = 25; // Base limpia
+  if (clichesEncontrados.length > 0) {
+    scoreCliches += clichesEncontrados.length * 18;
+  }
+  if (conectoresEncontrados.length >= 3) {
+    scoreCliches += conectoresEncontrados.length * 7;
+  }
+
+  // 4. Voz Personal & Subjetividad
+  let scoreVozPersonal = 50;
+  const ratioMarcas = totalWords > 0 ? (marcasPersonalesEncontradas.length / totalWords) * 100 : 0;
+  if (ratioMarcas > 4.5) scoreVozPersonal = 18; // Fuerte impronta personal humana
+  else if (ratioMarcas > 2.0) scoreVozPersonal = 34;
+  else if (ratioMarcas < 0.5) scoreVozPersonal = 68; // Tono expositivo impersonal típico de LLM
+
+  // 5. Naturalidad & Variedad Dialectal
+  let scoreNaturalidad = 50;
+  if (regionalEncontrados.length > 0) {
+    scoreNaturalidad -= regionalEncontrados.length * 14; // Modismos reducen drásticamente la probabilidad de IA genérica
+  }
+  if (/[—"«»¿?¡!]/.test(texto)) {
+    scoreNaturalidad -= 12; // Diálogos y signos de puntuación enfáticos
+  }
+
+  // Ajustes según tipo de texto
+  if (tipoTexto === "rol") {
+    // En narrativa y rol, los diálogos reducen aún más la puntuación de IA
+    scoreNaturalidad -= 10;
+  } else if (tipoTexto === "ensayo") {
+    // En ensayos es natural que haya conectores formales; suavizamos la penalización
+    scoreCliches = Math.max(25, scoreCliches - 12);
+  }
+
+  // Clampeo individual de aspectos
+  scoreCadencia = clamp(Math.round(scoreCadencia));
+  scoreLexico = clamp(Math.round(scoreLexico));
+  scoreCliches = clamp(Math.round(scoreCliches));
+  scoreVozPersonal = clamp(Math.round(scoreVozPersonal));
+  scoreNaturalidad = clamp(Math.round(scoreNaturalidad));
+
+  // Ponderación total
+  // Cadencia (28%), Clichés (26%), Voz Personal (18%), Naturalidad (16%), Léxico (12%)
+  const scoreFinalPonderado = Math.round(
+    (scoreCadencia * 0.28) +
+    (scoreCliches * 0.26) +
+    (scoreVozPersonal * 0.18) +
+    (scoreNaturalidad * 0.16) +
+    (scoreLexico * 0.12)
+  );
+
+  const probIA = clamp(scoreFinalPonderado, 4, 96);
+  const probHumana = 100 - probIA;
+
+  // Dictamen y descripción
+  let veredicto = "";
+  let interpretacion = "";
+  let claseBarra = "bar-mixed";
+
+  if (probIA < 38) {
+    veredicto = "Fuerte compatibilidad con redacción humana";
+    interpretacion = "El texto muestra variabilidad rítmica en sus oraciones (burstiness), giros idiomáticos, marcas personales o naturalidad expresiva que son atípicos en modelos automatizados.";
+    claseBarra = "bar-human";
+  } else if (probIA < 65) {
+    veredicto = "Patrones mixtos o indeterminados — Requiere cotejo humano";
+    interpretacion = "El texto exhibe señales híbridas: conviven tramos de cadencia equilibrada con rasgos espontáneos. No es posible formular una presunción de autoría confiable.";
+    claseBarra = "bar-mixed";
+  } else {
+    veredicto = "Múltiples patrones compatibles con generación de IA";
+    interpretacion = "Se detectó regularidad estructural elevada en la cadencia oracional, fórmulas discursivas estándar y un tono impersonal recurrente en textos sintéticos generados por LLMs.";
+    claseBarra = "bar-ai";
+  }
+
+  // Nivel de confianza estadística según longitud
+  let confianza = "Media";
+  if (totalWords < 45) confianza = "Baja (Muestra breve)";
+  else if (totalWords > 130) confianza = "Alta (Muestra representativa)";
+
+  return {
+    totalWords,
+    uniqueCount,
+    sentencesCount: sentencesRaw.length,
+    sentencesRaw,
+    statsSentences,
+    guiraud: guiraud.toFixed(2),
+    ttr: ttr.toFixed(1),
+    probIA,
+    probHumana,
+    veredicto,
+    interpretacion,
+    claseBarra,
+    confianza,
+    regionalEncontrados,
+    clichesEncontrados,
+    conectoresEncontrados,
+    marcasPersonalesEncontradas,
+    oracionesEvaluadas,
+    aspectos: [
+      { nombre: "Cadencia & Burstiness", ia: scoreCadencia, desc: "Variabilidad en longitud y estructura de oraciones" },
+      { nombre: "Fórmulas & Clichés de LLM", ia: scoreCliches, desc: "Presencia de muletillas y conectores sintéticos" },
+      { nombre: "Voz Personal & Subjetividad", ia: scoreVozPersonal, desc: "Marcas enunciativas de primera persona y afectividad" },
+      { nombre: "Naturalidad & Dialecto", ia: scoreNaturalidad, desc: "Modismos regionales y marcas conversacionales" },
+      { nombre: "Diversidad & Riqueza Léxica", ia: scoreLexico, desc: "Distribución del vocabulario según el índice de Guiraud" }
+    ]
+  };
+}
+
+/* ==========================================================================
+   ACCIÓN PRINCIPAL: ANALIZAR TEXTO (CON ESTADO ASÍNCRONO DE CARGA)
+   ========================================================================== */
+function analizar() {
+  const texto = document.getElementById("texto").value.trim();
+
+  // Validación 1: Texto vacío
+  if (!texto) {
+    mostrarToast("Por favor ingresá o pegá un texto para analizar.");
+    document.getElementById("texto").focus();
+    return;
+  }
+
+  const words = tokenizeWords(texto);
+  // Validación 2: Texto demasiado corto
+  if (words.length < 20) {
+    mostrarToast("El texto es demasiado breve (mínimo 20 palabras para métricas de ritmo oracional).");
+    return;
+  }
+
+  // Estado de carga y procesamiento
+  const btn = document.getElementById("btnAnalizar");
+  const btnIcon = document.getElementById("btnAnalizarIcon");
+  const btnText = document.getElementById("btnAnalizarText");
+
+  btn.disabled = true;
+  btnIcon.className = "spinner";
+  btnIcon.textContent = "";
+  btnText.textContent = "Analizando ritmo y lingüística...";
+
+  // Ejecutamos en timeout para permitir que la UI pinte el estado de carga
+  setTimeout(() => {
+    try {
+      const pais = document.getElementById("pais").value;
+      const region = document.getElementById("region").value.trim();
+      const ciudad = document.getElementById("ciudad").value.trim();
+      const tipoTexto = document.getElementById("tipoTexto").value;
+
+      const res = ejecutarAnalisisEstilometrico(texto, pais, tipoTexto);
+      analisisActual = { ...res, texto, pais, region, ciudad, tipoTexto, fecha: new Date().toISOString() };
+
+      renderizarResultados(analisisActual);
+      guardarEnHistorial(analisisActual);
+      mostrarToast("✦ Análisis completado con éxito");
+    } catch (err) {
+      console.error("Error al procesar el texto:", err);
+      mostrarToast("Ocurrió un error al procesar el texto. Verificá los caracteres.");
+    } finally {
+      btn.disabled = false;
+      btnIcon.className = "";
+      btnIcon.textContent = "✦";
+      btnText.textContent = "Analizar texto";
+    }
+  }, 350);
+}
+
+/* ==========================================================================
+   RENDERIZADO DE RESULTADOS COMPLETO (PESTAÑAS, GRÁFICOS Y REPORTES)
+   ========================================================================== */
+function renderizarResultados(data) {
+  const out = document.getElementById("output");
+  const ctx = [data.pais, data.region, data.ciudad].filter(Boolean).join(" · ") || "Sin especificar";
+
+  out.innerHTML = `
+    <!-- Panel Resumen Principal -->
+    <div class="card" style="text-align:center; padding: 24px 20px;">
+      <div class="badge" style="margin-bottom:6px;">PROBABILIDAD ESTIMADA DE PATRONES DE IA</div>
+      <div class="big-num">${data.probIA}%</div>
+
+      <div style="max-width: 480px; margin: 8px auto 14px;">
+        <div class="bar">
+          <i class="${data.claseBarra}" style="width:${data.probIA}%"></i>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:.78rem; color:var(--muted); margin-top:6px;">
+          <span>Humano: <b>${data.probHumana}%</b></span>
+          <span>Nivel de confianza: <b>${esc(data.confianza)}</b></span>
+          <span>IA: <b>${data.probIA}%</b></span>
+        </div>
+      </div>
+
+      <div style="font-size:1.15rem; font-weight:700; color:#f1ebff; margin:6px 0;">${esc(data.veredicto)}</div>
+      <div class="small" style="max-width:620px; margin:0 auto; line-height:1.55;">${esc(data.interpretacion)}</div>
+      <div class="small" style="margin-top:10px; color:var(--lila);">Contexto evaluado: <b>${esc(ctx)}</b></div>
+
+      <!-- Barra de acciones rápidas de informe -->
+      <div class="btns" style="justify-content:center; margin-top:18px;">
+        <button class="btn btn-ghost btn-sm" onclick="copiarInforme()" title="Copiar informe textual al portapapeles">
+          📋 Copiar informe
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="descargarInforme('txt')" title="Descargar reporte en formato .txt">
+          ⬇ Descargar TXT
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="descargarInforme('json')" title="Exportar datos forenses en formato JSON">
+          { } Exportar JSON
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="compartirResultado()" title="Compartir resultado estimado">
+          🔗 Compartir
+        </button>
+      </div>
+    </div>
+
+    <!-- Navegación por Pestañas Técnicas -->
+    <div class="card">
+      <div class="tabs-nav" role="tablist">
+        <button class="tab-btn active" onclick="cambiarPestana(event, 'tab-aspectos')">1. Perfil por Aspectos</button>
+        <button class="tab-btn" onclick="cambiarPestana(event, 'tab-oraciones')">2. Inspector de Oraciones (${data.sentencesCount})</button>
+        <button class="tab-btn" onclick="cambiarPestana(event, 'tab-metricas')">3. Estilometría & Riqueza</button>
+        <button class="tab-btn" onclick="cambiarPestana(event, 'tab-informe')">4. Informe de Revisión</button>
+      </div>
+
+      <!-- PESTAÑA 1: Aspectos -->
+      <div id="tab-aspectos" class="tab-pane active">
+        <h3 style="font-size:1.3rem; margin:0 0 14px;">Desglose de Factores Evaluados</h3>
+        ${data.aspectos.map(a => `
+          <div style="margin: 16px 0; background:#140f27; padding:12px 14px; border-radius:14px; border:1px solid var(--borde);">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+              <div>
+                <b style="color:#f2ecff; font-size:.95rem;">${esc(a.nombre)}</b>
+                <div class="small" style="margin:2px 0 0; font-size:.78rem;">${esc(a.desc)}</div>
+              </div>
+              <div style="text-align:right; font-weight:700; font-size:.9rem; white-space:nowrap;">
+                <span style="color:${a.ia > 55 ? '#f87171' : a.ia < 40 ? '#34d399' : '#fbbf24'}">${a.ia}% señales IA</span>
+              </div>
+            </div>
+            <div class="bar" style="height:7px;">
+              <i class="${a.ia > 55 ? 'bar-ai' : a.ia < 40 ? 'bar-human' : 'bar-mixed'}" style="width:${a.ia}%"></i>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <!-- PESTAÑA 2: Inspector de Oraciones -->
+      <div id="tab-oraciones" class="tab-pane">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+          <div>
+            <h3 style="font-size:1.3rem; margin:0;">Mapa de Oraciones & Cadencia (Burstiness)</h3>
+            <div class="small">Hacé clic en cualquier oración coloreada para inspeccionar sus métricas individuales.</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="pill pill-alert">Patrón uniforme</span>
+            <span class="pill pill-neutral">Intermedio</span>
+            <span class="pill pill-human">Cadencia humana</span>
+          </div>
+        </div>
+
+        <div class="sentence-flow">
+          ${data.oracionesEvaluadas.map((s, idx) => `
+            <span class="s-mark s-${s.clasificacion}" onclick="abrirModalOracion(${idx})" title="Oración #${idx + 1} (${s.wordsCount} palabras)">${esc(s.text)} </span>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: Métricas Lingüísticas -->
+      <div id="tab-metricas" class="tab-pane">
+        <h3 style="font-size:1.3rem; margin:0 0 4px;">Métricas Estilométricas Detalladas</h3>
+        <div class="small" style="margin-bottom:14px;">Parámetros cuantitativos calculados sobre la muestra provista.</div>
+
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <div class="m-val">${data.totalWords}</div>
+            <div class="m-label">Total de Palabras</div>
+            <div class="m-desc">Extensión neta tokenizada.</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="m-val">${data.statsSentences.cv.toFixed(2)}</div>
+            <div class="m-label">Burstiness (CV Oracional)</div>
+            <div class="m-desc">Coeficiente de variación. &gt;0.45 indica alternancia humana típica.</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="m-val">${data.statsSentences.mean.toFixed(1)} pal.</div>
+            <div class="m-label">Longitud Media Oracional</div>
+            <div class="m-desc">Desviación típica: ±${data.statsSentences.std.toFixed(1)} palabras.</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="m-val">${data.guiraud}</div>
+            <div class="m-label">Riqueza Léxica (Guiraud)</div>
+            <div class="m-desc">Vocabulario único normalizado por raíz cuadrada. TTR simple: ${data.ttr}%.</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="m-val">${data.clichesEncontrados.length}</div>
+            <div class="m-label">Clichés de LLM detectados</div>
+            <div class="m-desc">${data.clichesEncontrados.length ? esc(data.clichesEncontrados.slice(0, 3).join(", ")) : "Ninguno observado"}</div>
+          </div>
+
+          <div class="metric-box">
+            <div class="m-val">${data.regionalEncontrados.length}</div>
+            <div class="m-label">Modismos Regionales</div>
+            <div class="m-desc">${data.regionalEncontrados.length ? esc(data.regionalEncontrados.join(", ")) : "Sin términos dialectales marcados"}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 4: Informe Textual -->
+      <div id="tab-informe" class="tab-pane">
+        <h3 style="font-size:1.3rem; margin:0 0 4px;">Informe de Revisión</h3>
+        <div class="small" style="margin-bottom:12px;">Texto listo para copiar o archivar en expedientes de revisión editorial o académica.</div>
+        <textarea id="txtInformeGenerado" style="min-height:220px; font-family:monospace; font-size:.85rem;" readonly>${esc(generarTextoInforme(data))}</textarea>
+        <div class="btns" style="margin-top:10px;">
+          <button class="btn btn-primary btn-sm" onclick="copiarInforme()">Copiar informe</button>
+          <button class="btn btn-ghost btn-sm" onclick="descargarInforme('txt')">Guardar como archivo</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Scroll suave al resultado
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ==========================================================================
+   SISTEMA DE PESTAÑAS Y MODALES
+   ========================================================================== */
+function cambiarPestana(evt, paneId) {
+  const container = evt.currentTarget.closest(".card");
+  container.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  container.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("active"));
+
+  evt.currentTarget.classList.add("active");
+  const target = document.getElementById(paneId);
+  if (target) target.classList.add("active");
+}
+
+function abrirModalOracion(idx) {
+  if (!analisisActual || !analisisActual.oracionesEvaluadas[idx]) return;
+  const s = analisisActual.oracionesEvaluadas[idx];
+
+  document.getElementById("modalOracionTitulo").textContent = `Oración #${idx + 1} (${s.wordsCount} palabras)`;
+  document.getElementById("modalOracionContenido").innerHTML = `
+    <blockquote style="background:#130e26; border-left:4px solid var(--lila2); padding:12px; margin:0 0 14px; border-radius:0 10px 10px 0;">
+      "${esc(s.text)}"
+    </blockquote>
+
+    <div style="margin-bottom:12px;">
+      <b>Índice de uniformidad estimado:</b> ${s.score}% señales IA / ${100 - s.score}% humano
+      <div class="bar"><i class="${s.score >= 65 ? 'bar-ai' : s.score <= 40 ? 'bar-human' : 'bar-mixed'}" style="width:${s.score}%"></i></div>
+    </div>
+
+    <div>
+      <b>Factores detectados en esta oración:</b>
+      <ul style="padding-left:20px; margin:6px 0;">
+        ${s.razones.map(r => `<li>${esc(r)}</li>`).join("")}
+      </ul>
+    </div>
+  `;
+  document.getElementById("modalOracion").classList.add("open");
+}
+
+function cerrarModalOracion() {
+  document.getElementById("modalOracion").classList.remove("open");
+}
+
+function abrirModalMetodologia() {
+  document.getElementById("modalMetodologia").classList.add("open");
+}
+
+function cerrarModalMetodologia() {
+  document.getElementById("modalMetodologia").classList.remove("open");
+}
+
+/* ==========================================================================
+   PORTAPAPELES, EJEMPLOS Y ACCIONES UX
+   ========================================================================== */
+async function pegarTexto() {
+  try {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      const clipText = await navigator.clipboard.readText();
+      if (clipText) {
+        document.getElementById("texto").value = clipText;
+        actualizarContadores();
+        mostrarToast("Texto pegado desde el portapapeles ✦");
+        return;
+      }
+    }
+  } catch (e) {
+    // Si los permisos en el navegador/iframe están restringidos
+  }
+  mostrarToast("Hacé clic en la caja de texto y presioná Ctrl+V (o Cmd+V) para pegar.");
+  document.getElementById("texto").focus();
+}
+
+function limpiar() {
+  document.getElementById("texto").value = "";
+  actualizarContadores();
+  document.getElementById("output").innerHTML = "";
+  analisisActual = null;
+  mostrarToast("Editor y resultados limpiados");
+}
+
+function cargarEjemplo(tipo) {
+  if (tipo === "ia") {
+    document.getElementById("pais").value = "España";
+    document.getElementById("tipoTexto").value = "general";
+    document.getElementById("texto").value =
+`En conclusión, es importante destacar que la inteligencia artificial desempeña un papel crucial en la transformación digital de las organizaciones modernas. Por lo tanto, no cabe duda alguna de que la adopción progresiva de estas herramientas permite optimizar procesos complejos con gran eficiencia. En este sentido, resulta fundamental señalar que los profesionales deben capacitarse continuamente para adaptarse a las nuevas exigencias del mercado. En términos generales, el impacto de estas innovaciones representa un testimonio irrefutable del avance técnico contemporáneo, promoviendo una integración armónica entre automatización y desarrollo sostenible.`;
+  } else {
+    document.getElementById("pais").value = "Argentina";
+    document.getElementById("tipoTexto").value = "rol";
+    document.getElementById("region").value = "Santa Fe";
+    document.getElementById("ciudad").value = "Reconquista";
+    document.getElementById("texto").value =
+`*Lance Rivalder* —Siento el tirón en mi túnica y me giro hacia Aeltharion. Sus dedos aprietan la tela con fuerza mientras intenta respirar entre bocanadas hiperventiladas.
+—Pará un poco, che —le susurro al oído, bancándolo con el hombro para que no se me desmorone en medio del barro—. Respirá hondo. ¿No ves que el bondi de los guardias todavía ni dobló la esquina?
+Miro hacia el callejón oscuro. Nada. Ni un alma. Posta que pensé que nos caían encima en cualquier momento. Aprieto los dientes, me acomodo la espada y le doy una palmada en la espalda para despabilarlo antes de que sea tarde.`;
+  }
+  actualizarContadores();
+  mostrarToast(`Ejemplo "${tipo === 'ia' ? 'Texto Sintético IA' : 'Narrativa Humana'}" cargado`);
+  analizar();
+}
+
+/* ==========================================================================
+   EXPORTACIÓN, COPIADO Y REPORTE
+   ========================================================================== */
+function generarTextoInforme(d) {
+  const ctx = [d.pais, d.region, d.ciudad].filter(Boolean).join(" · ") || "Sin especificar";
+  const fechaStr = new Date(d.fecha).toLocaleString("es-AR");
+
+  return `=======================================================
+DETECTOR DE IA ORIÓN · INFORME ESTILOMÉTRICO
+=======================================================
+Fecha: ${fechaStr}
+Contexto: ${ctx}
+Sensibilidad / Tipo: ${d.tipoTexto}
+Probabilidad estimada de señales de IA: ${d.probIA}%
+Probabilidad estimada de señales humanas: ${d.probHumana}%
+Dictamen orientativo: ${d.veredicto}
+Nivel de confianza: ${d.confianza}
+
+INTERPRETACIÓN:
+${d.interpretacion}
+
+DESGLOSE POR FACTORES:
+${d.aspectos.map(a => `- ${a.nombre}: ${a.ia}% señales IA / ${100 - a.ia}% humanas (${a.desc})`).join("\n")}
+
+MÉTRICAS CUANTITATIVAS:
+- Palabras totales: ${d.totalWords}
+- Oraciones evaluadas: ${d.sentencesCount}
+- Longitud oracional media: ${d.statsSentences.mean.toFixed(1)} palabras (Desv. Típica: ±${d.statsSentences.std.toFixed(1)})
+- Burstiness (Coef. Variación): ${d.statsSentences.cv.toFixed(2)}
+- Riqueza Léxica (Índice Guiraud): ${d.guiraud} (TTR: ${d.ttr}%)
+- Fórmulas / Clichés de LLM detectados: ${d.clichesEncontrados.length ? d.clichesEncontrados.join(", ") : "Ninguno"}
+- Marcas de voz personal / subjetividad: ${d.marcasPersonalesEncontradas.length}
+- Términos dialectales regionales: ${d.regionalEncontrados.length ? d.regionalEncontrados.join(", ") : "Ninguno"}
+
+NOTA LEGAL Y METODOLÓGICA:
+Este análisis es de carácter heurístico y estilométrico. No garantiza con certeza absoluta la autoría de un texto y no debe utilizarse de manera aislada para evaluaciones académicas o sanciones sin debida revisión humana.`;
+}
+
+function copiarInforme() {
+  if (!analisisActual) return;
+  const textoInforme = generarTextoInforme(analisisActual);
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(textoInforme)
+      .then(() => mostrarToast("Informe copiado al portapapeles ✦"))
+      .catch(() => copiarFallback(textoInforme));
+  } else {
+    copiarFallback(textoInforme);
+  }
+}
+
+function copiarFallback(str) {
+  const ta = document.createElement("textarea");
+  ta.value = str;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand("copy");
+    mostrarToast("Informe copiado al portapapeles ✦");
+  } catch (e) {
+    mostrarToast("Seleccioná el texto del informe para copiarlo.");
+  }
+  document.body.removeChild(ta);
+}
+
+function descargarInforme(formato) {
+  if (!analisisActual) return;
+  let contenido = "";
+  let nombreArchivo = "";
+  let mime = "";
+
+  const timestamp = new Date().toISOString().slice(0, 10);
+
+  if (formato === "json") {
+    contenido = JSON.stringify(analisisActual, null, 2);
+    nombreArchivo = `informe_orion_ia_${timestamp}.json`;
+    mime = "application/json";
+  } else {
+    contenido = generarTextoInforme(analisisActual);
+    nombreArchivo = `informe_orion_ia_${timestamp}.txt`;
+    mime = "text/plain;charset=utf-8";
+  }
+
+  const blob = new Blob([contenido], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreArchivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  mostrarToast(`Archivo ${nombreArchivo} descargado ✦`);
+}
+
+function compartirResultado() {
+  if (!analisisActual) return;
+  const shareData = {
+    title: "Detector de IA Orión",
+    text: `Análisis Estilométrico Orión: ${analisisActual.probIA}% de probabilidad estimada de señales automatizadas (${analisisActual.veredicto}).`,
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else {
+    copiarInforme();
+    mostrarToast("Resumen copiado para compartir ✦");
+  }
+}
+
+/* ==========================================================================
+   PERSISTENCIA EN HISTORIAL LOCAL
+   ========================================================================== */
+function guardarEnHistorial(item) {
+  try {
+    const key = "orion_detector_historial_v2";
+    const history = JSON.parse(localStorage.getItem(key) || "[]");
+
+    const entry = {
+      id: Date.now(),
+      fecha: new Date().toLocaleString("es-AR"),
+      pais: item.pais,
+      probIA: item.probIA,
+      veredicto: item.veredicto,
+      textoPreview: item.texto.slice(0, 120) + (item.texto.length > 120 ? "..." : ""),
+      textoCompleto: item.texto
+    };
+
+    history.unshift(entry);
+    localStorage.setItem(key, JSON.stringify(history.slice(0, 15)));
+    renderHistorial();
+  } catch (e) {
+    console.warn("No se pudo guardar en localStorage:", e);
+  }
+}
+
+function renderHistorial() {
+  const lista = document.getElementById("historialLista");
+  const btnBorrar = document.getElementById("btnBorrarHistorial");
+
+  try {
+    const history = JSON.parse(localStorage.getItem("orion_detector_historial_v2") || "[]");
+    if (!history.length) {
+      lista.innerHTML = '<div class="small">Todavía no hay análisis guardados en esta sesión.</div>';
+      btnBorrar.style.display = "none";
+      return;
+    }
+
+    btnBorrar.style.display = "inline-flex";
+    lista.innerHTML = history.map((h, i) => `
+      <div class="hist-item">
+        <div class="hist-click" onclick="restaurarAnalisis(${h.id})" title="Hacé clic para recargar este texto en el editor">
+          <div style="display:flex; justify-content:space-between; gap:6px; margin-bottom:4px;">
+            <b style="color:${h.probIA > 55 ? '#f87171' : h.probIA < 40 ? '#34d399' : '#fbbf24'}">
+              ${h.probIA}% señales IA
+            </b>
+            <span class="small" style="font-size:.75rem;">${esc(h.fecha)}</span>
+          </div>
+          <div class="small" style="color:var(--txt); font-size:.82rem; font-style:italic; line-height:1.4;">
+            "${esc(h.textoPreview)}"
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="eliminarEntradaHistorial(${h.id})" title="Eliminar entrada individual" style="padding:6px 10px; min-height:auto;">
+          &times;
+        </button>
+      </div>
+    `).join("");
+  } catch (e) {
+    lista.innerHTML = '<div class="small">Historial no disponible.</div>';
+  }
+}
+
+function restaurarAnalisis(id) {
+  try {
+    const history = JSON.parse(localStorage.getItem("orion_detector_historial_v2") || "[]");
+    const found = history.find(x => x.id === id);
+    if (found) {
+      document.getElementById("texto").value = found.textoCompleto;
+      if (found.pais) document.getElementById("pais").value = found.pais;
+      actualizarContadores();
+      mostrarToast("Texto restaurado desde el historial");
+      analizar();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function eliminarEntradaHistorial(id) {
+  try {
+    const key = "orion_detector_historial_v2";
+    let history = JSON.parse(localStorage.getItem(key) || "[]");
+    history = history.filter(x => x.id !== id);
+    localStorage.setItem(key, JSON.stringify(history));
+    renderHistorial();
+    mostrarToast("Entrada eliminada");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function borrarHistorial() {
+  if (confirm("¿Estás seguro de que querés borrar todo el historial?")) {
+    localStorage.removeItem("orion_detector_historial_v2");
+    renderHistorial();
+    mostrarToast("Historial vaciado");
+  }
+}
+
+function mostrarToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.display = "flex";
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => {
+    t.style.display = "none";
+  }, 3200);
+}
+</script>
+
+</body>
+</html>
